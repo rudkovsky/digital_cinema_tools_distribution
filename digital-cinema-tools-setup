@@ -62,15 +62,6 @@ basedir=$HOME/.digital_cinema_tools
 libdir=$basedir/.lib
 bindir=$basedir/.bin
 
-# Ruby version management: rbenv
-rbenv_url="git://github.com/sstephenson/rbenv.git"
-export RBENV_ROOT=$libdir/.rbenv
-rbenv_dir=$RBENV_ROOT
-rbenv_plugins_dir=$rbenv_dir/plugins
-
-# Ruby build system: ruby-build
-rubybuild_url="git://github.com/sstephenson/ruby-build.git"
-rubybuild_dir=$rbenv_plugins_dir/ruby-build
 ruby_version='2.1.5'
 gemrc=$HOME/.gemrc
 
@@ -416,63 +407,6 @@ fi
 
 source $bashrc
 
-
-# rbenv
-if command_exists rvm
-then
-  echo
-  echo "Sorry. This installer insists on using rbenv for Ruby version management."
-  echo "You have RVM installed and those 2 won't co-exist peacefully, so there."
-  echo "If you want to continue remove RVM from your system and re-run this installer."
-  echo
-  exit 1
-fi
-if command_exists rbenv
-then
-  echo "rbenv: OK"
-else
-  if location_exists $rbenv_dir && location_exists $rbenv_dir/.git
-  then
-    echo "rbenv: Repository exists"
-    if string_includes $PATH "$rbenv_dir/bin"
-    then
-      echo "rbenv: PATH includes rbenv bin dir"
-    else
-      errors+=("rbenv: PATH does not include rbenv bin dir") && echo_last errors[@]
-    fi
-  else
-    echo "rbenv: Installing"
-    remove_if_exists $rbenv_dir
-    if ! git clone $rbenv_url $rbenv_dir
-    then
-      errors+=("rbenv: Failed to clone repository. Try again later") && echo_last errors[@]
-    fi
-
-    case $os_dist in
-      debian|ubuntu)
-        env_target=$bash_profile ;;
-      redhat|opensuse)
-        env_target=$bashrc ;;
-    esac
-    echo '' >> $env_target
-    echo "# $setup_basename: rbenv environment" >> $env_target
-    echo "export RBENV_ROOT=$rbenv_dir" >> $env_target
-    echo "export PATH=$rbenv_dir/bin:"'$PATH' >> $env_target
-    echo 'eval "$(rbenv init -)"' >> $env_target
-    source $env_target
-    exec_shell_required=true
-
-    if command_exists rbenv
-    then
-      echo "rbenv: OK"
-    else
-      echo "rbenv: Command 'rbenv' not found"
-      exit 1
-    fi
-  fi
-fi
-
-
 # gems: ri/rdoc switches
 if [ -e $gemrc ]
 then
@@ -486,67 +420,6 @@ else
   echo 'gem: --no-ri --no-rdoc' > $gemrc
 fi
 
-
-# ruby-build (as rbenv plugin)
-if location_exists $rbenv_dir
-then
-  if ! location_exists $rbenv_plugins_dir
-  then
-    mkdir $rbenv_plugins_dir
-  fi
-else
-  mkdir -p $rbenv_plugins_dir
-fi
-cd $rbenv_plugins_dir
-if location_is_git_repo $rubybuild_dir
-then
-  cd $rubybuild_dir
-  if ! git pull
-  then
-    errors+=("ruby-build: Failed to pull updates. Try again later") && echo_last errors[@]
-  else
-    echo 'ruby-build: OK'
-  fi
-else
-  remove_if_exists $rubybuild_dir
-  echo 'ruby-build: Installing'
-  if ! git clone $rubybuild_url
-  then
-    errors+=("ruby-build: Failed to clone repository. Try again later") && echo_last errors[@]
-  else
-    echo 'ruby-build: OK'
-  fi
-fi
-
-
-# Try to install a ruby version
-# Explicitly set global $ruby_version
-if command_exists rbenv
-then
-  if ! rbenv global $ruby_version
-  then
-    echo 'rbenv: Required ruby not installed'
-  fi
-  if [[ `rbenv version` =~ $ruby_version ]] && command_exists ruby
-  then
-    echo "Ruby: OK"
-  else
-    echo "Ruby: Installing ... This will take a while (~5 minutes)"
-    if ! rbenv install $ruby_version
-    then
-      errors+=("Ruby: Failed to install requested version") && echo_last errors[@]
-    else
-      rbenv global $ruby_version
-      rbenv rehash
-      echo "Ruby: $( rbenv version )"
-      echo 'Ruby: OK'
-    fi
-  fi
-else
-  errors+=("Ruby: Failed to install ruby (Required command rbenv not found)") && echo_last errors[@]
-fi
-
-
 # Nokogiri (with c14n)
 if command_exists gem
 then
@@ -559,7 +432,6 @@ then
     then
       errors+=("Nokogiri: Failed to install rtequired gem nokogiri") && echo_last errors[@]
     else
-      rbenv rehash
       echo 'Nokogiri: Installed gem nokogiri'
     fi
   fi
@@ -567,7 +439,7 @@ then
   # Check for C14N support
   if gem list -i nokogiri &> /dev/null
   then
-    if [[ `rbenv version` =~ $ruby_version ]] && command_exists ruby
+    if [[ `ruby --version` =~ $ruby_version ]] && command_exists ruby
     then
       ruby -e "require 'rubygems'; require 'nokogiri'; if Nokogiri::XML::Document.new.respond_to?( 'canonicalize' ) then exit 0 else exit 1 ; end"
       if [ $? == 0 ]
@@ -795,7 +667,7 @@ then
   then
     echo 'dcp_inspect: Nice-to-have gem ttfunk OK'
   else
-    if ! gem install ttfunk && rbenv rehash
+    if ! gem install ttfunk
     then
       echo 'dcp_inspect: Failed to install nice-to-have gem ttfunk. This is not a critical error'
     else
@@ -810,7 +682,7 @@ then
   then
     echo 'cinemaslides: Required gem highline OK'
   else
-    if ! gem install highline && rbenv rehash
+    if ! gem install highline
     then
       errors+=("cinemaslides: Failed to install required gem highline. Try again later") && echo_last errors[@]
     else
