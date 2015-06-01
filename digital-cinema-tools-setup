@@ -88,6 +88,7 @@ asdcplib_dir=$libdir/asdcplib
 asdcplib_build_dir="$asdcplib_dir/asdcplib-$asdcplib_version"
 asdcplib_install_dir=$bindir/asdcplib
 
+rvm install $ruby_version
 rvm $ruby_version
 
 # Digital cinema tools distribution: cinemaslides, dcp_inspect etc.
@@ -778,7 +779,6 @@ then
   if [[ $setup_dirname != $bindir ]]
   then
     echo "$setup_basename: Removing ad-hoc self"
-    rm $setup_fullpath
   fi
 elif [ -x $bindir/$setup_basename ]
 then
