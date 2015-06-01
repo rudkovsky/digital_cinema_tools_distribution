@@ -62,8 +62,6 @@ basedir=$HOME/.digital_cinema_tools
 libdir=$basedir/.lib
 bindir=$basedir/.bin
 
-ruby_version='2.1.5'
-
 gemrc=$HOME/.gemrc
 
 # JPEG2000 codec: OpenJPEG
@@ -419,9 +417,6 @@ then
 else
   echo 'gem: --no-ri --no-rdoc' > $gemrc
 fi
-
-rvm install $ruby_version
-rvm $ruby_version
 
 # Nokogiri (with c14n)
 if command_exists gem
