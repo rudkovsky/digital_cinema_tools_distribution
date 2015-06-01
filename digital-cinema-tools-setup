@@ -63,6 +63,8 @@ libdir=$basedir/.lib
 bindir=$basedir/.bin
 
 ruby_version='2.1.5'
+
+
 gemrc=$HOME/.gemrc
 
 # JPEG2000 codec: OpenJPEG
@@ -85,6 +87,8 @@ asdcplib_tarball_url="http://$cinecert/$asdcplib_tarball"
 asdcplib_dir=$libdir/asdcplib
 asdcplib_build_dir="$asdcplib_dir/asdcplib-$asdcplib_version"
 asdcplib_install_dir=$bindir/asdcplib
+
+rvm $ruby_version
 
 # Digital cinema tools distribution: cinemaslides, dcp_inspect etc.
 dist_url="git://github.com/wolfgangw/digital_cinema_tools_distribution.git"
